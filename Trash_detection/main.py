@@ -65,6 +65,7 @@ from pycocotools.cocoeval import COCOeval
 from pycocotools import mask as maskUtils
 
 import time
+import cv2
 
 #load image
 from keras.preprocessing.image import load_img, img_to_array
@@ -79,7 +80,7 @@ COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
 
-def test_dataset(model, dataset, image_arr):
+def test_dataset(model, dataset, image_arr, count):
     # image_test = load_img('can.jpg')
     # image_arr = img_to_array(image_test)
 
@@ -97,12 +98,30 @@ def test_dataset(model, dataset, image_arr):
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 16))
 
-        # Display predictions
-    visualize.display_instances(image_arr, r['rois'], r['masks'], r['class_ids'],
-                                dataset.class_names, r['scores'], title="Predictions", ax=ax1)
+    trashClass = ["BG", "Plastic", "Can", "Other"]
 
+    print(r['class_ids'])
+    for i in range(0, len(r['class_ids'])):
+        if r['class_ids'][i] == 1 or r['class_ids'][i] == 2 or r['class_ids'][i] == 5 or r['class_ids'][i] == 6 or r['class_ids'][i] == 10:
+            r['class_ids'][i] = 1
+        elif r['class_ids'][i] == 3 or r['class_ids'][i] == 9:
+            r['class_ids'][i] = 2
+        elif r['class_ids'][i] == 4 or r['class_ids'][i] == 7 or r['class_ids'][i] == 8:
+            r['class_ids'][i] = 3
+        else:
+            r['class_ids'][i] = 0
+
+    print(r['class_ids'])
+    # Display predictions
+    # visualize.display_instances(image_arr, r['rois'], r['masks'], r['class_ids'],
+    #                             dataset.class_names, r['scores'], title="Predictions", ax=ax1)
+    visualize.display_instances(image_arr, r['rois'], r['masks'], r['class_ids'],
+                                trashClass, r['scores'], title="Predictions", ax=ax1)
+
+    
     print(r['rois'])
-    tmp_name = 'test_temp.jpg'
+    print(dataset.class_names)
+    tmp_name = './output/temp_' + str(count) + '.jpg'
     plt.savefig(tmp_name)
     print("Finished!!!")
 
@@ -122,6 +141,7 @@ def init():
     args.model = "last"
     args.dataset = "./data"
     args.round = 0
+    # args.class_map = "./detector/taco_config/map_10.csv"
     args.class_map = "./detector/taco_config/map_10.csv"
 
     # Read map of target classes
@@ -140,7 +160,7 @@ def init():
         NAME = "taco"
         GPU_COUNT = 1
         IMAGES_PER_GPU = 1
-        DETECTION_MIN_CONFIDENCE = 0.9
+        DETECTION_MIN_CONFIDENCE = 0.8
         NUM_CLASSES = nr_classes
     config = TacoTestConfig()
     config.display()
@@ -159,10 +179,31 @@ def init():
     return model, dataset_test
 if __name__ == '__main__':
     print("test")
-
-    image_test = load_img('can.jpg')
-    image_arr = img_to_array(image_test)
-
+    cap = cv2.VideoCapture('4.mp4')
     model, dataset = init()
 
-    test_dataset(model, dataset, image_arr)
+    count = 0
+    while(cap.isOpened()):
+        if count < 100:
+            ret, frame = cap.read()
+            count += 1
+            continue
+
+        ret, frame = cap.read()
+        image_arr = img_to_array(frame)
+        test_dataset(model, dataset, image_arr, count)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        count += 1
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+    # image_test = load_img('test1.jpg')
+    # image_arr = img_to_array(image_test)
+
+    # model, dataset = init()
+
+    # test_dataset(model, dataset, image_arr, 0)
