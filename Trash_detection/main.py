@@ -59,6 +59,7 @@ from model import MaskRCNN
 from config import Config
 import visualize
 import utils
+
 import matplotlib.pyplot as plt
 
 from pycocotools.cocoeval import COCOeval
@@ -66,6 +67,7 @@ from pycocotools import mask as maskUtils
 
 import time
 import cv2
+
 
 #load image
 from keras.preprocessing.image import load_img, img_to_array
@@ -78,7 +80,6 @@ COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 
 # Directory to save logs and model checkpoints
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
-
 
 def test_dataset(model, dataset, image_arr, count):
     # image_test = load_img('can.jpg')
@@ -96,11 +97,28 @@ def test_dataset(model, dataset, image_arr, count):
     print("---{}s seconds---".format(time.time()-start_time))
     print("Finish detection!!!!!!!!!!!")
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 16))
+    # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 16))
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
 
     trashClass = ["BG", "Plastic", "Can", "Other"]
 
-    print(r['class_ids'])
+    height, width = frame.shape[:2]
+    resizeTrash = (height, width / 3)
+ 
+    index = []
+    for i in range(0, len(r['rois'])):
+        trashSize = ( r['rois'][i][2] - r['rois'][i][0],  r['rois'][i][3] - r['rois'][i][1])
+        if trashSize[0] > resizeTrash[0] or trashSize[1] > resizeTrash[1]:
+            index.append(i)
+
+    r['rois'] = np.delete(r['rois'], index, axis=0)
+    r['class_ids'] = np.delete(r['class_ids'], index, axis=0)
+    r['scores'] = np.delete(r['scores'], index, axis=0)
+
+    # print("===========", r['scores'])    
+
+    # print(r['class_ids'])
     for i in range(0, len(r['class_ids'])):
         if r['class_ids'][i] == 1 or r['class_ids'][i] == 2 or r['class_ids'][i] == 5 or r['class_ids'][i] == 6 or r['class_ids'][i] == 10:
             r['class_ids'][i] = 1
@@ -111,19 +129,21 @@ def test_dataset(model, dataset, image_arr, count):
         else:
             r['class_ids'][i] = 0
 
-    print(r['class_ids'])
+    # print(r['class_ids'])
     # Display predictions
     # visualize.display_instances(image_arr, r['rois'], r['masks'], r['class_ids'],
     #                             dataset.class_names, r['scores'], title="Predictions", ax=ax1)
     visualize.display_instances(image_arr, r['rois'], r['masks'], r['class_ids'],
                                 trashClass, r['scores'], title="Predictions", ax=ax1)
-
     
-    print(r['rois'])
-    print(dataset.class_names)
+    # print("mask ", r['masks'], "length ", len(r['masks']))
+    # print(r['rois'])
+    # print(dataset.class_names)
     tmp_name = './output/temp_' + str(count) + '.jpg'
     plt.savefig(tmp_name)
     print("Finished!!!")
+
+    
 
 def init():
 
@@ -177,33 +197,50 @@ def init():
     augmentation_pipeline = None
 
     return model, dataset_test
+
 if __name__ == '__main__':
-    print("test")
-    cap = cv2.VideoCapture('4.mp4')
+
+    # detection
+    cap = cv2.VideoCapture('1029_final.mp4')
     model, dataset = init()
 
     count = 0
     while(cap.isOpened()):
-        if count < 100:
-            ret, frame = cap.read()
-            count += 1
-            continue
+        # if count >= 1:
+        #     ret, frame = cap.read()
+        #     count += 1
+        #     # continue
+        #     break
 
         ret, frame = cap.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
         image_arr = img_to_array(frame)
-        test_dataset(model, dataset, image_arr, count)
+        # test_dataset(model, dataset, image_arr, count)
+        test_dataset(model, dataset, frame, count)
+
+        # resultTemp = cv2.imread("./output/temp_' + str(count) + '.jpg", 1)
+        # # height, width, channel = resultTemp.shape
+        # out.write(resultTemp)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         count += 1
 
     cap.release()
+
+
+    # #make detection file
+    # width = 640
+    # height = 480
+    # out = cv2.VideoWriter('outpy.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 20, (width, height), 1)
+
+    # for i in range(0, 528):
+    #     path = './output/temp_' + str(i) + '.jpg'
+    #     resultTemp = cv2.imread(path, 1)
+    #     # height, width, channel = resultTemp.shape
+    #     out.write(resultTemp)
+
+    # out.release()
+
     cv2.destroyAllWindows()
-
-
-    # image_test = load_img('test1.jpg')
-    # image_arr = img_to_array(image_test)
-
-    # model, dataset = init()
-
-    # test_dataset(model, dataset, image_arr, 0)
