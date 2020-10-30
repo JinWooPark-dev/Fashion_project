@@ -1,9 +1,14 @@
+from io import BytesIO
+
 import requests
 import json
 import base64
 import os
 import time
 import asyncio
+import numpy as np
+
+import array as ar
 
 url = "http://101.101.208.247:5000/image"
 # img_dir = './images/webcam'
@@ -38,6 +43,28 @@ def App_test():
         headers = {'Content-Type': 'application/json'}
         response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
         print(response.json())
+        # aa = response.json()['x1']
+
+        # if aa == 'test':
+        #     continue
+        # else:
+        #     pass
+            # print(type(aa))
+            # a = base64.b64decode(aa)
+            # print(type(a))
+            # temp = json.loads(a)
+            # print(temp)
+            # print("test!!!!!!")
+            # print(aa)
+            # if len(aa) <= 0:
+            #     print("test")
+            # else:
+            #     print(aa)
+
+            # print(base64.b64encode(a).decode('utf-8'))
+            # print(BytesIO(base64.b64decode(aa)).getvalue())
+            # byte = BytesIO(base64.b64decode(aa))
+            # print(np.frombuffer(byte, dtype=np.float64))
         # try:
         #     # response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
         #     result = response.json()  # dict

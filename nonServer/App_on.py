@@ -160,6 +160,7 @@ def init():
     dataset_test = Taco()
     taco = dataset_test.load_taco(args.dataset, args.round, "test", class_map=class_map, return_taco=True)
     dataset_test.prepare()
+    # taco.prepare()
     nr_classes = dataset_test.num_classes
 
     class TacoTestConfig(Config):
@@ -220,10 +221,10 @@ def image_segmentation():
     # tf.keras.backend.clear_session()
     if request.method == 'POST':
         response = {}
-        response['message1'] = 'Hello World1!'
+        # response['message1'] = 'Hello World1!'
 
         if 'data' in request.json:
-            response['message2'] = 'Hello World2!'
+            # response['message2'] = 'Hello World2!'
             i = request.json['num']
             # response['aaaaaaaaaaaaaaaa'] = i
 
@@ -237,17 +238,64 @@ def image_segmentation():
             # print("1")
             image_arr = img_to_array(tempImage)
             # print("2")
+
             a, b = test_dataset(model, dataset, image_arr, i)
-            a = [[123, 123, 123, 123]]
-            if len(a) > 0:
-                response['aaaaaaaaaaaaaaaa'] = a[0][0]
+
+
+            # response['coodinate'] = a[0][0]
+
+            # if len(a) > 0:
+            #     response['coodinate'] = a[0][0]
+            # else:
+            #     response['coodinate'] = "error"
+
+            # Test for App_test
+            # a = 'hello world'
+            # a = [['123', '123', '123', '123']]
+
+            dataA = [[0 for i in range(len(a[j]))] for j in range(len(a))]
+            for i in range(0, len(a)):
+                temp = a[i]
+                for j in range(0, len(temp)):
+                    data = temp[j]
+                    dataA[i][j] = str(data)
+                    print("a[i][j] ", dataA[i][j])
+            if len(a) <= 0:
+                response['coodinate'] = 'none'
             else:
-                response['aaaaaaaaaaaaaaaa'] = "test"
+                # print("temp!!!!!!!!")
+                # print(a)
+                response['coodinate'] = dataA
+
+            dataB = [0 for j in range(len(b))]
+            for i in range(0, len(b)):
+                dataB[i] = str(b[i])
+
+            if len(b) <= 0:
+                response['class_name'] = 'none'
+            else:
+                # print("temp!!!!!!!!")
+                # print(a)
+                response['class_name'] = dataB
+
+
+            # if len(a) == 0:
+            #     response['x1'] = "test"
+            # else:
+            #     # response['x1'] = base64.b64encode()
+            #     temp = str(a)
+            #     response['x1'] = temp.encode('utf8')
+            #     print(response['x1'])
+
+
+
             # print("3")
             print(type(a))
+            print("I'm aaaaaaaaaaaaaaaaaaaaa!!!!!!!!!!!!", a)
             # a = base64.b64encode(a).decode('utf-8')
             # print("4")
-            print(type(b))
+            # print(type(b))
+            # print("I'm bbbbbbbbbbbbbbbbbbbbbb!!!!!!!!!!!!", b)
             # b = base64.b64encode(b).decode('utf-8')
             # print("5")
             #
